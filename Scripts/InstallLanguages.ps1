@@ -20,15 +20,14 @@ https://github.com/StefanDingemanse/NMW/edit/main/scripted-actions/windows-scrip
 #>
 
 # Customize the following variables
-$languagePacks="en-US","nl-NL"
+$languagePacks="en-US","nl-NL","fr-FR","de-DE"
 $defaultLanguage="nl-NL"
 
 # Start powershell logging
 $SaveVerbosePreference = $VerbosePreference
 $VerbosePreference = 'continue'
-$VMTime = Get-Date
-$LogTime = $VMTime.ToUniversalTime()
-Start-Transcript -Path "C:\Windows\temp\NMWLogs\ScriptedActions\languages\ps_log.txt" -Append
+$LogTime = Get-Date
+Start-Transcript -Path "C:\Windows\temp\InstallLanguages_log.txt" -Append
 Write-Host "################# New Script Run #################"
 Write-host "Current time (UTC-0): $LogTime"
 Write-host "The following language packs will be installed"
