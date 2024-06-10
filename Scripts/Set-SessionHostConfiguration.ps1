@@ -83,7 +83,7 @@ try {
         #  Run the Virtual Desktop Optimization Tool (VDOT)
         ##############################################################
         # https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool
-        {
+
                 # Download VDOT
                 $URL = 'https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
                 $ZIP = 'VDOT.zip'
@@ -115,8 +115,7 @@ try {
                 # Run VDOT
                 & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations 'All' -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA
 
-                Write-Log -Message 'Optimized the operating system using VDOT' -Type 'INFO'
-        }    
+                Write-Log -Message 'Optimized the operating system using VDOT' -Type 'INFO'  
 
         ##############################################################
         #  Add Recommended AVD Settings
