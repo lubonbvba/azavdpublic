@@ -20,8 +20,8 @@ https://github.com/StefanDingemanse/NMW/edit/main/scripted-actions/windows-scrip
 #>
 
 # Customize the following variables
-$languagePacks="en-US","nl-NL","fr-FR","de-DE"
-$defaultLanguage="nl-NL"
+$languagePacks = "nl-NL","fr-FR","de-DE"
+$defaultLanguage = "nl-NL"
 
 # Start powershell logging
 $SaveVerbosePreference = $VerbosePreference
@@ -56,4 +56,4 @@ Set-SystemPreferredUILanguage $defaultLanguage
 
 # End Logging
 Stop-Transcript
-$VerbosePreference=$SaveVerbosePreference
+$VerbosePreference = $SaveVerbosePreference
