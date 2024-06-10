@@ -416,11 +416,10 @@ try {
         ##############################################################
         #  Restart VM
         ##############################################################
-        if ($IdentityServiceProvider -eq "EntraID" -and $AmdVmSize -eq 'false' -and $NvidiaVmSize -eq 'false') {
-                Start-Process -FilePath 'shutdown' -ArgumentList '/r /t 30'
-        }
+        Write-Log -Message 'Set-SessionHostConfiguration finished, restarting' -Type 'INFO'
+        Start-Process -FilePath 'shutdown' -ArgumentList '/r /t 30'
         }
         catch {
         Write-Log -Message $_ -Type 'ERROR'
         throw
-        }
+}
