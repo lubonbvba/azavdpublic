@@ -404,6 +404,17 @@ try {
         Start-Sleep -Seconds 5
 
         ##############################################################
+        #  Install extra language packs
+        ##############################################################
+        # Download script
+
+        $URL = 'https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/InstallLanguages.ps1'
+        $script = 'InstallLanguages.ps1'
+        Invoke-WebRequest -Uri $URL -OutFile $script
+        . $script
+        Write-Log -Message 'Installed Language Packs' -Type 'INFO'
+
+        ##############################################################
         #  Restart VM
         ##############################################################
         if ($IdentityServiceProvider -eq "EntraID" -and $AmdVmSize -eq 'false' -and $NvidiaVmSize -eq 'false') {
