@@ -408,9 +408,8 @@ try {
         ##############################################################
         # Download script
 
-        $URL = 'https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/InstallLanguages.ps1'
         $script = 'InstallLanguages.ps1'
-        Invoke-WebRequest -Uri $URL -OutFile $script
+        Get-WebFile -FileName $script -URL 'https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/InstallLanguages.ps1'
         . .\$script
         Write-Log -Message 'Installed Language Packs' -Type 'INFO'
 
