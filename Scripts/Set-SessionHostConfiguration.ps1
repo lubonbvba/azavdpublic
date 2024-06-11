@@ -404,16 +404,6 @@ try {
         Start-Sleep -Seconds 5
 
         ##############################################################
-        #  Install extra language packs
-        ##############################################################
-        # Download script
-
-        $script = 'InstallLanguages.ps1'
-        Get-WebFile -FileName $script -URL 'https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/InstallLanguages.ps1'
-        . .\$script
-        Write-Log -Message 'Installed Language Packs' -Type 'INFO'
-
-        ##############################################################
         #  Restart VM
         ##############################################################
         Write-Log -Message 'Set-SessionHostConfiguration finished, restarting' -Type 'INFO'
