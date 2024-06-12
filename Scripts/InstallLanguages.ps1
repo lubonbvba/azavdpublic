@@ -20,8 +20,8 @@ https://github.com/StefanDingemanse/NMW/edit/main/scripted-actions/windows-scrip
 #>
 
 # Customize the following variables
-$languagePacks = "nl-NL","fr-FR","de-DE"
-$defaultLanguage = "nl-NL"
+$languagePacks = "nl-BE","fr-BE","de-DE"
+$defaultLanguage = "nl-BE"
 
 # Start powershell logging
 $SaveVerbosePreference = $VerbosePreference
@@ -53,6 +53,14 @@ else
 Write-Host "Setting default Language to: $defaultLanguage"
 Set-SystemPreferredUILanguage $defaultLanguage
 }
+
+#Set all regional setting to nl-BE
+Set-Culture -CultureInfo nl-BE
+Set-WinSystemLocale -SystemLocale nl-BE
+Set-WinUILanguageOverride -Language nl-BE
+Set-WinUserLanguageList -LanguageList nl-BE -Force
+Set-WinHomeLocation -GeoId 21
+Copy-UserInternationalSettingsToSystem -WelcomeScreen $false -NewUser $True
 
 # End Logging
 Stop-Transcript
