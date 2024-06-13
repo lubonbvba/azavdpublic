@@ -23,6 +23,15 @@ https://github.com/StefanDingemanse/NMW/edit/main/scripted-actions/windows-scrip
 $languagePacks = "nl-BE","fr-BE","de-DE"
 $defaultLanguage = "nl-BE"
 
+# Define Geo Id
+if($defaultLanguage -eq "nl-BE"){
+    $geoId = '21'
+} 
+elseif ($defaultLanguage -eq "nl-NL") {
+    $geoId = "176"
+}
+
+
 # Start powershell logging
 $SaveVerbosePreference = $VerbosePreference
 $VerbosePreference = 'continue'
@@ -32,6 +41,8 @@ Write-Host "################# New Script Run #################"
 Write-host "Current time (UTC-0): $LogTime"
 Write-host "The following language packs will be installed"
 Write-Host "$languagePacks"
+
+Set-TimeZone "Romance Standard Time"
 
 #Disable Language Pack Cleanup (do not re-enable)
 Disable-ScheduledTask -TaskPath "\Microsoft\Windows\AppxDeploymentClient\" -TaskName "Pre-staged app cleanup" | Out-Null
@@ -54,12 +65,34 @@ Write-Host "Setting default Language to: $defaultLanguage"
 Set-SystemPreferredUILanguage $defaultLanguage
 }
 
-#Set all regional setting to nl-BE
-Set-Culture -CultureInfo nl-BE
-Set-WinSystemLocale -SystemLocale nl-BE
-Set-WinUILanguageOverride -Language nl-BE
-Set-WinUserLanguageList -LanguageList nl-BE -Force
-Set-WinHomeLocation -GeoId 21
+#Set all regional setting to default language
+Set-Culture -CultureInfo $defaultLanguage
+Set-WinSystemLocale -SystemLocale $defaultLanguage
+Set-WinUILanguageOverride -Language $defaultLanguage
+Set-WinUserLanguageList -LanguageList $defaultLanguage -Force
+Set-WinHomeLocation -GeoId $geoId
+
+# Update the SYSTEM user registry with extra settings for nl-BE before copying the settings to new users
+if($defaultLanguage -eq "nl-BE"){
+    $settings = @{
+    "Locale" = "00000813"
+    "LocaleName" = "nl-BE"
+    "sDate" = "/"
+    "sShortDate" = "d/MM/yyyy"
+    "iCountry" = "32"
+    "iLZero" = "1"
+    "iTLZero" = "0"
+    }
+
+    # Loop through each setting and update the registry
+    foreach ($key in $settings.Keys) {
+        $name = $key
+        $value = $settings[$key]
+        # Modify the registry value
+        Set-ItemProperty -Path "Registry::HKEY_USERS\.DEFAULT\Control Panel\International" -Name $name -Value $value
+}
+}
+
 Copy-UserInternationalSettingsToSystem -WelcomeScreen $false -NewUser $True
 
 # End Logging
