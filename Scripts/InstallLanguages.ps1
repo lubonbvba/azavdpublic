@@ -42,7 +42,7 @@ Write-host "Current time (UTC-0): $LogTime"
 Write-host "The following language packs will be installed"
 Write-Host "$languagePacks"
 
-Set-TimeZone -Id "Romance Standard Time"
+Set-TimeZone -Id "Romance Standard Time" -PassThru
 
 #Disable Language Pack Cleanup (do not re-enable)
 Disable-ScheduledTask -TaskPath "\Microsoft\Windows\AppxDeploymentClient\" -TaskName "Pre-staged app cleanup" | Out-Null
