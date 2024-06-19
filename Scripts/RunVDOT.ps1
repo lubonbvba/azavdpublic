@@ -61,5 +61,5 @@ foreach ($File in $Files) {
 
     $jsonContent | ConvertTo-Json | Set-Content -Path $File
 }      
-# Run VDOT
-& .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages, ScheduledTasks, DefaultUserSettings, LocalPolicy, Autologgers, Services, NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA
+# Run VDOT and reboot
+& .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages, ScheduledTasks, DefaultUserSettings, LocalPolicy, Autologgers, Services, NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA -Restart
