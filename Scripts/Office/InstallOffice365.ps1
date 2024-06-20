@@ -94,5 +94,3 @@ if ($OfficeInstalled) {
 else {
   Write-Log -Message "Office Instalation Failed" -Type "ERROR"
 }
-
-Read-Host "End"
