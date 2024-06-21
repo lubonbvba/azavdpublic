@@ -20,7 +20,7 @@ https://github.com/StefanDingemanse/NMW/edit/main/scripted-actions/windows-scrip
 #>
 
 # Customize the following variables
-$languagePacks = "nl-BE","fr-BE","de-DE"
+$languagePacks = "nl-NL","nl-BE","fr-BE","de-DE"
 $defaultLanguage = "nl-BE"
 
 # Define Geo Id
