@@ -31,7 +31,6 @@ $appxPackagesToDisable = @(
     "Microsoft.Windows.DevHome",
     "microsoft.windowscommunicationsapps",
     "Microsoft.WindowsFeedbackHub",
-    "Microsoft.WindowsMaps",
     "Microsoft.WindowsTerminal",
     "Microsoft.Xbox.TCUI",
     "Microsoft.XboxGameOverlay",
