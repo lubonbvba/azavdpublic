@@ -59,6 +59,17 @@ foreach ($File in $Files) {
     }
 
     $jsonContent | ConvertTo-Json | Set-Content -Path $File
-}      
+}
+
+# Enable Geolocation service
+$services = (Get-ChildItem -Path .\VDOT\Virtual-Desktop-Optimization-Tool-main -File -Recurse -Filter "Services.json").FullName
+$jsonContent = Get-Content -Path $services | ConvertFrom-Json
+foreach($service in $jsonContent){
+    if ($service.Name -eq "lfsvc"){
+        $service.VDIState = "Unchanged"
+    }
+}
+$jsonContent | ConvertTo-Json | Set-Content -Path $services
+
 # Run VDOT and reboot
 & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages, ScheduledTasks, DefaultUserSettings, LocalPolicy, Autologgers, Services, NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA -Restart
