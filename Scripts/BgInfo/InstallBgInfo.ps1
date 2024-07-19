@@ -31,7 +31,6 @@ Copy-Item -Path $sourceFile -Destination $destinationPath -Force
 
 # Clean up the temporary files
 Remove-Item -Path $zipPath -Force
-Remove-Item -Path $configPath -Force
 Remove-Item -Path $extractPath -Recurse -Force
 
 # Create the registry key to run BGInfo at startup
