@@ -1,6 +1,6 @@
 <Configuration ID="156fcc5f-e13f-44a4-8a00-b7c1012c6cdc">
   <Add OfficeClientEdition="64" Channel="MonthlyEnterprise" OfficeMgmtCOM="FALSE">
-    <Product ID="O365ProPlusRetail">
+    <Product ID="O365BusinessRetail">
       <Language ID="en-us" />
       <Language ID="nl-nl" />
       <Language ID="fr-fr" />
