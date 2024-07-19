@@ -9,7 +9,7 @@ $destinationPath = "C:\Program Files\Bginfo"
 $configDestinationPath = "$destinationPath\config.bgi"
 $regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
 $regName = "BGInfo"
-$regValue = "$destinationPath\Bginfo64.exe $configDestinationPath /NOLICPROMPT /timer:0"
+$regValue = "`"$destinationPath\Bginfo64.exe`" `"$configDestinationPath`" /NOLICPROMPT /timer:0"
 
 # Create the destination directory if it doesn't exist
 if (-not (Test-Path -Path $destinationPath)) {
