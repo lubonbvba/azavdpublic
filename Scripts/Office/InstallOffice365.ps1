@@ -3,7 +3,7 @@
 param(
     [Parameter(Mandatory = $true, Position = 1, HelpMessage = "Specify Office channel, Monthly Enterprise (MEC) or Semi-Annual Enterprise Channel (SEC) ")]
     [ValidateSet("MEC", "SEC")]
-    [string]$channel = "MEC"
+    [string]$channel = "SEC"
 )
 
 # Create working dir
