@@ -3,7 +3,7 @@
 param(
     [Parameter(Mandatory = $true, Position = 1, HelpMessage = "Specify Office channel, Monthly Enterprise (MEC) or Semi-Annual Enterprise Channel (SEC) ")]
     [ValidateSet("MEC", "SEC")]
-    [string]$channel = "MEC"
+    [string]$channel = "SEC"
 )
 
 # Create working dir
@@ -55,7 +55,7 @@ if($channel -eq "SEC"){
     Write-Log -Message "Downloading Office Semi-Anual Enterprise configuration file" -Type 'INFO'
     $SECUrl = "https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/Office/Configuration-Semi-Anual-Enterprise.xml"
     $configXMLFile = "Configuratie-Semi-Anual-Enterprise.xml"
-    Invoke-WebRequest -Uri $MECUrl -OutFile "$workingDir\$configXMLFile"
+    Invoke-WebRequest -Uri $SECUrl -OutFile "$workingDir\$configXMLFile"
 }
 
 # Extract ODT
