@@ -180,6 +180,14 @@ try {
                         Path         = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'
                         PropertyType = 'DWord'
                         Value        = 1
+                },
+
+                # Allow enable location
+                [PSCustomObject]@{
+                        Name         = 'Value'
+                        Path         = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location'
+                        PropertyType = 'String'
+                        Value        = 'Allow'
                 }
         )
 
