@@ -4,8 +4,7 @@
 $uninstalledPrograms = @(
     "*remote Desktop Services*",
     "*remote Desktop agent*",
-    "Microsoft Intune Management Extension",
-    "Microsoft Monitoring Agent"
+    "Microsoft Intune Management Extension"
 )
 
 # Uninstall programs
@@ -29,7 +28,7 @@ foreach ($programName in $uninstalledPrograms) {
 
 # Delete specific registry keys
 $regKeysToDelete = @(
-    "HKLM:\SOFTWARE\Microsoft\RDMonitoringAgent",
+    #"HKLM:\SOFTWARE\Microsoft\RDMonitoringAgent"
     "HKLM:\SOFTWARE\Microsoft\RDInfraAgent"
 )
 
