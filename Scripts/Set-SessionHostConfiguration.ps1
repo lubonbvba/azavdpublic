@@ -425,6 +425,7 @@ try {
         #  Restart VM
         ##############################################################
         Write-Log -Message 'Set-SessionHostConfiguration finished, restarting' -Type 'INFO'
+        Write-Log -Message 'Lubon session host script' -Type 'INFO'
         Start-Process -FilePath 'shutdown' -ArgumentList '/r /t 30'
         }
         catch {
