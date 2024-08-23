@@ -49,7 +49,7 @@ param(
 )
 $Path = 'C:\Windows\Temp\AVDSessionHostConfig.log'
 if (!(Test-Path -Path $Path)) {
-        New-Item -Path 'C:\' -Name 'AVDSessionHostConfig.log' | Out-Null
+        New-Item -Path 'C:\' -Name 'AVDSessionHostConfig.log' -Force | Out-Null
 }
 $Timestamp = Get-Date -Format 'MM/dd/yyyy HH:mm:ss.ff'
 $Entry = '[' + $Timestamp + '] [' + $Type + '] ' + $Message
