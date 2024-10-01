@@ -12,7 +12,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Teams" -Name IsWVDEnvironment -
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Teams" -Name disableAutoUpdate -PropertyType DWORD -Value 1 -Force
 
 # Install the Remote Desktop WebRTC Redirector Service
-$url = "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RW1jLHP"
+$url = "https://aka.ms/msrdcwebrtcsvc/msi"
 $webRTC = "MsRdcWebRTCSvc_x64.msi"
 Invoke-WebRequest -Uri $url -OutFile "$workingDir\$webRTC" -UseBasicParsing
 Start-Process -FilePath "$workingDir\$webRTC" -Args "/quiet /norestart /log C:\Temp\AVD\webrtc.log" -Wait
