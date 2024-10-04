@@ -154,8 +154,14 @@ try {
                 $jsonContent | ConvertTo-Json | Set-Content -Path $services
 
                 # Run VDOT
-                & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages,ScheduledTasks,DefaultUserSettings,LocalPolicy,Autologgers,Services,NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA
-
+                If((Get-ComputerInfo).CsName -like "C0032*") {
+                        Write-Log -Message "Run VDOT without RemoveLegacyIE" -Type 'INFO' 
+                        & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages,ScheduledTasks,DefaultUserSettings,LocalPolicy,Autologgers,Services,NetworkOptimizations -AdvancedOptimizations 'Edge' -AcceptEULA
+                } else {
+                        Write-Log -Message "Run VDOT" -Type 'INFO' 
+                        & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages,ScheduledTasks,DefaultUserSettings,LocalPolicy,Autologgers,Services,NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA
+                }           
+                
                 Write-Log -Message 'Optimized the operating system using VDOT' -Type 'INFO'
         } else {
                 Write-Log -Message 'Server Os detected skip VDOT' -Type 'INFO'
