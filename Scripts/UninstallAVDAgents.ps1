@@ -1,26 +1,33 @@
-#Remove AVD agents
+# Remove AVD agents
 
 # Define programs to uninstall
 $uninstalledPrograms = @(
-    "*remote Desktop Services*",
-    "*remote Desktop agent*",
+    "Remote Desktop Agent Boot Loader",
+    "Remote Desktop Services Infrastructure Agent",
+    "Remote Desktop Services Infrastructure Geneva Agent*",
+    "Remote Desktop Services SxS Network Stack"
     "Microsoft Intune Management Extension"
 )
 
 # Uninstall programs
 foreach ($program in $uninstalledPrograms) {
-    (Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $program }).Uninstall() | Out-Null
+    Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $program } | ForEach-Object {
+        Write-Host "Uninstalling $($_.Name)"
+        $_.Uninstall() | Out-Null
+    }
 }
 
 # Pause to allow uninstalls to complete
 Start-Sleep -Seconds 30
 
 # Check if uninstall was successful
-Write-Output "Check registry for installations"
+Write-Output "Checking registry for remaining installations..."
 foreach ($programName in $uninstalledPrograms) {
-    $registryKey = Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.DisplayName -like $programName }
+    $registryKey = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" -ErrorAction SilentlyContinue |
+                   Where-Object { $_.DisplayName -like $programName }
+    
     if ($registryKey) {
-        Write-Error "$programName is still installed."
+        Write-Warning "$programName is still installed."
     } else {
         Write-Output "$programName has been successfully uninstalled."
     }
@@ -39,4 +46,17 @@ foreach ($regKey in $regKeysToDelete) {
     } else {
         Write-Output "$regKey does not exist."
     }
+}
+
+# Remove .msi files from C:\Program Files\Microsoft RDInfra
+$msiFiles = Get-ChildItem -Path "C:\Program Files\Microsoft RDInfra" -Filter *.msi -Recurse -ErrorAction SilentlyContinue
+
+if ($msiFiles) {
+    foreach ($msi in $msiFiles) {
+        Write-Host "Deleting $($msi.FullName)"
+        Remove-Item -Path $msi.FullName -Force
+    }
+    Write-Output "All .msi files in C:\Program Files\Microsoft RDInfra have been deleted."
+} else {
+    Write-Output "No .msi files found in C:\Program Files\Microsoft RDInfra."
 }
