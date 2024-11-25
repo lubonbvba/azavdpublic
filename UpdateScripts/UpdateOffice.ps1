@@ -33,7 +33,7 @@ do {
     Start-Sleep -Seconds 5
 } while ($OfficeProcesses.Count -ne 1)
 
-Start-Sleep -Seconds 180
+Start-Sleep -Seconds 300
 
 Write-Host "Update process finished."
 
