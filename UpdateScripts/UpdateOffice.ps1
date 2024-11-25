@@ -33,6 +33,8 @@ do {
     Start-Sleep -Seconds 5
 } while ($OfficeProcesses.Count -ne 1)
 
+Start-Sleep -Seconds 180
+
 Write-Host "Update process finished."
 
 # Report Office version after the update
