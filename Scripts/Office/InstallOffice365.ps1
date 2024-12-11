@@ -30,13 +30,17 @@ function Write-Log {
     
 function Get-ODTURL {
 
-    [String]$MSWebPage = Invoke-RestMethod 'https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117'
-  
-    $MSWebPage | ForEach-Object {
-      if ($_ -match 'url=(https://.*officedeploymenttool.*\.exe)') {
-        $matches[1]
-      }
-    }
+  [String]$MSWebPage = Invoke-RestMethod -Uri 'https://www.microsoft.com/en-us/download/details.aspx?id=49117'
+      
+  $regex = 'https:\/\/download\.microsoft\.com\/download\/.*?\/.*?\.exe'
+  $matchesUrl = [regex]::Matches($MSWebPage, $regex)
+    
+  if ($matchesUrl.Count -gt 0) {
+    $matchesUrl[0].Value
+  }
+  else {
+    Write-Output "No download URL found."
+  }
 }
 
 # Download All files

@@ -4,15 +4,36 @@
 $workingDir = "C:\Temp\AVD\Office"
 New-Item -ItemType Directory -Path $workingDir -Force
 
+function Write-Log {
+  param(
+          [parameter(Mandatory)]
+          [string]$Message,
+  
+          [parameter(Mandatory)]
+          [string]$Type
+  )
+  #$Path = 'C:\Temp\AVD\OfficeInstall.log'
+  if (!(Test-Path -Path $workingDir)) {
+          New-Item -Path $workingDir -Name 'OfficeInstall.log' | Out-Null
+  }
+  $Timestamp = Get-Date -Format 'dd/MM/yyyy HH:mm:ss.ff'
+  $Entry = '[' + $Timestamp + '] [' + $Type + '] ' + $Message
+  $Entry | Out-File -FilePath "$workingDir\OfficeUninstall.log" -Append
+  }
+
 function Get-ODTURL {
 
-    [String]$MSWebPage = Invoke-RestMethod 'https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117'
+  [String]$MSWebPage = Invoke-RestMethod -Uri 'https://www.microsoft.com/en-us/download/details.aspx?id=49117'
   
-    $MSWebPage | ForEach-Object {
-      if ($_ -match 'url=(https://.*officedeploymenttool.*\.exe)') {
-        $matches[1]
-      }
-    }
+  $regex = 'https:\/\/download\.microsoft\.com\/download\/.*?\/.*?\.exe'
+  $matchesUrl = [regex]::Matches($MSWebPage, $regex)
+
+  if ($matchesUrl.Count -gt 0) {
+    $matchesUrl[0].Value
+  }
+  else {
+    Write-Output "No download URL found."
+  }
 }
 
 # Download All files
@@ -69,5 +90,5 @@ if ($OfficeInstalled) {
   Write-Output "Office Removed Successfully"
 }
 else {
-  Write-Log -Message "Office Instalation Failed" -Type "ERROR"
+  Write-Log -Message "Office Removal Failed" -Type "ERROR"
 }
