@@ -159,7 +159,7 @@ try {
                         & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages,ScheduledTasks,DefaultUserSettings,LocalPolicy,Autologgers,Services,NetworkOptimizations -AdvancedOptimizations 'Edge' -AcceptEULA
                 } else {
                         Write-Log -Message "Run VDOT" -Type 'INFO' 
-                        #& .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages,ScheduledTasks,DefaultUserSettings,LocalPolicy,Autologgers,Services,NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA
+                        & .\VDOT\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1 -Optimizations AppxPackages,ScheduledTasks,DefaultUserSettings,LocalPolicy,Autologgers,Services,NetworkOptimizations -AdvancedOptimizations 'Edge', 'RemoveLegacyIE' -AcceptEULA
                 }           
                 
                 Write-Log -Message 'Optimized the operating system using VDOT' -Type 'INFO'
