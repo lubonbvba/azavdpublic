@@ -18,7 +18,7 @@ Write-Host "Office version before update: $BeforeUpdateVersion"
 
 # Path to the OfficeC2RClient executable
 $OfficeC2RClientPath = "C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe"
-$Arguments = "/update user updatetoversion=16.0.17328.20670 displaylevel=false forceappshutdown=true"
+$Arguments = "/update user updatetoversion=16.0.17928.20392 displaylevel=false forceappshutdown=true"
 
 # Start the update process
 Write-Host "Starting Office 365 update..."
