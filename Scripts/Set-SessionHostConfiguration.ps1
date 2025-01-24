@@ -105,7 +105,7 @@ try {
                 "Microsoft.GamingApp",
                 "Microsoft.Getstarted",
                 "Microsoft.MicrosoftSolitaireCollection",
-                "Microsoft.OutlookForWindows",
+                #"Microsoft.OutlookForWindows",
                 "Microsoft.People",
                 "Microsoft.PowerAutomateDesktop",
                 "Microsoft.SkypeApp",
