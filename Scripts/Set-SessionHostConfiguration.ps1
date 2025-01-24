@@ -88,7 +88,7 @@ try {
         if((Get-ComputerInfo).WindowsInstallationType -eq "Client"){
 
                 # Download VDOT
-                $URL = 'https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
+                $URL = 'https://github.com/lubon-public/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
                 $ZIP = 'VDOT.zip'
                 Invoke-WebRequest -Uri $URL -OutFile $ZIP
 
