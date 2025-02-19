@@ -309,6 +309,12 @@ try {
                                 Path         = 'HKLM:\SOFTWARE\FSLogix\Profiles'
                                 PropertyType = 'DWord'
                                 Value        = 1
+                        },
+                        [PSCustomObject]@{
+                                Name         = 'LogFileKeepingPeriod'
+                                Path         = 'HKLM:\SOFTWARE\FSLogix\Logging'
+                                PropertyType = 'DWord'
+                                Value        = 7
                         }
                 )
         }
