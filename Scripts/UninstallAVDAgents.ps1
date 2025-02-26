@@ -48,6 +48,23 @@ foreach ($regKey in $regKeysToDelete) {
     }
 }
 
+# Cleanup Azure Monitor Agent
+$regPath = "HKLM:\SOFTWARE\Microsoft\AzureMonitorAgent\Secrets"
+$regValue = "PersistenceKeyCreated"
+if (Test-Path $regPath) {
+    if (Get-ItemProperty -Path $regPath -Name $regValue -ErrorAction SilentlyContinue) {
+        Remove-ItemProperty -Path $regPath -Name $regValue -Force
+        Write-Output "Registry value '$regValue' has been successfully deleted from $regPath."
+    } else {
+        Write-Output "Registry value '$regValue' does not exist in $regPath."
+    }
+} else {
+    Write-Output "Registry key $regPath does not exist."
+}
+
+Write-Output "Delete AMA datastore"
+Get-ChildItem -Path "C:\WindowsAzure\Resources" -Directory -Filter "AMADataStore*" | Remove-Item -Recurse -Force
+
 # Remove .msi files from C:\Program Files\Microsoft RDInfra
 $msiFiles = Get-ChildItem -Path "C:\Program Files\Microsoft RDInfra" -Filter *.msi -Recurse -ErrorAction SilentlyContinue
 
