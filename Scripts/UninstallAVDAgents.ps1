@@ -5,8 +5,9 @@ $uninstalledPrograms = @(
     "Remote Desktop Agent Boot Loader",
     "Remote Desktop Services Infrastructure Agent",
     "Remote Desktop Services Infrastructure Geneva Agent*",
-    "Remote Desktop Services SxS Network Stack"
-    "Microsoft Intune Management Extension"
+    "Remote Desktop Services SxS Network Stack",
+    "Microsoft Intune Management Extension",
+    "System Settings Proxy"
 )
 
 # Uninstall programs
