@@ -19,18 +19,39 @@ New PowerShell cmdlets: https://docs.microsoft.com/nl-nl/powershell/module/langu
 https://github.com/StefanDingemanse/NMW/edit/main/scripted-actions/windows-script/Install%20languages.ps1
 #>
 
-# Customize the following variables
-$languagePacks = "nl-NL","nl-BE","fr-BE","de-DE"
-$defaultLanguage = "nl-BE"
+param(
+    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "Specify Windows language packs to install")]
+    [ValidateSet("nl", "fr", "de")]
+    [string[]]$languagePacks = @("nl", "fr"),
 
-# Define Geo Id
-if($defaultLanguage -eq "nl-BE"){
-    $geoId = '21'
-} 
-elseif ($defaultLanguage -eq "nl-NL") {
-    $geoId = "176"
+    [Parameter(Mandatory = $false, Position = 2, HelpMessage = "Specify default Windows language for new users")]
+    [ValidateSet("nl-BE", "nl-NL",  "en", "fr", "de")]
+    [string]$defaultLanguage = "nl-BE"
+)
+
+# Define mapping from short code to full language code
+$languageMap = @{
+    "nl" = "nl-NL"
+    "fr" = "fr-BE"
+    "en" = "en-BE"
+    "de" = "de-DE"
 }
 
+# Map $languagePacks to full codes
+$languagePacksToInstall = $languagePacks | ForEach-Object { $languageMap[$_] }
+
+# Map $defaultLanguage to full code if needed
+if ($languageMap.ContainsKey($defaultLanguage)) {
+    $defaultLanguageToSet = $languageMap[$defaultLanguage]
+} else {
+    $defaultLanguageToSet = $defaultLanguage
+}
+
+# Define Geo Id
+$geoId = "21" #Set Default GeoId to nl-BE
+if($defaultLanguage -eq "nl-NL"){
+    $geoId = '176'
+}
 
 # Start powershell logging
 $SaveVerbosePreference = $VerbosePreference
@@ -40,7 +61,7 @@ Start-Transcript -Path "C:\Windows\temp\InstallLanguages_log.txt" -Append
 Write-Host "################# New Script Run #################"
 Write-host "Current time (UTC-0): $LogTime"
 Write-host "The following language packs will be installed"
-Write-Host "$languagePacks"
+Write-Host "$languagePacksToInstall"
 
 Set-TimeZone -Id "Romance Standard Time" -PassThru
 
@@ -48,7 +69,7 @@ Set-TimeZone -Id "Romance Standard Time" -PassThru
 Disable-ScheduledTask -TaskPath "\Microsoft\Windows\AppxDeploymentClient\" -TaskName "Pre-staged app cleanup" | Out-Null
 
 # Download and install the Language Packs
-foreach ($language in $languagePacks)
+foreach ($language in $languagePacksToInstall)
 {
 Write-Host "Installing Language Pack for: $language"
 Install-Language $language
@@ -61,19 +82,19 @@ Write-Host "Default Language not configured."
 }
 else
 {
-Write-Host "Setting default Language to: $defaultLanguage"
-Set-SystemPreferredUILanguage $defaultLanguage
+Write-Host "Setting default Language to: $defaultLanguageToSet"
+Set-SystemPreferredUILanguage $defaultLanguageToSet
 }
 
 #Set all regional setting to default language
-Set-Culture -CultureInfo $defaultLanguage
-Set-WinSystemLocale -SystemLocale $defaultLanguage
-Set-WinUILanguageOverride -Language $defaultLanguage
-Set-WinUserLanguageList -LanguageList $defaultLanguage -Force
+Set-Culture -CultureInfo $defaultLanguageToSet
+Set-WinSystemLocale -SystemLocale $defaultLanguageToSet
+Set-WinUILanguageOverride -Language $defaultLanguageToSet
+Set-WinUserLanguageList -LanguageList $defaultLanguageToSet -Force
 Set-WinHomeLocation -GeoId $geoId
 
 # Update the SYSTEM user registry with extra settings for nl-BE before copying the settings to new users
-if($defaultLanguage -eq "nl-BE"){
+if($defaultLanguageToSet -eq "nl-BE"){
     $settings = @{
     "Locale" = "00000813"
     "LocaleName" = "nl-BE"
