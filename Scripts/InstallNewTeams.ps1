@@ -11,12 +11,13 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Teams" -Name IsWVDEnvironment -
 # Disable auto update
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Teams" -Name disableAutoUpdate -PropertyType DWORD -Value 1 -Force
 
-# Install the Remote Desktop WebRTC Redirector Service
+<# Install the Remote Desktop WebRTC Redirector Service
 $url = "https://aka.ms/msrdcwebrtcsvc/msi"
 $webRTC = "MsRdcWebRTCSvc_x64.msi"
 Invoke-WebRequest -Uri $url -OutFile "$workingDir\$webRTC" -UseBasicParsing
 Start-Process -FilePath "$workingDir\$webRTC" -Args "/quiet /norestart /log C:\Temp\AVD\webrtc.log" -Wait
 Write-Output "Finished the installation of Remote Desktop WebRTC Redirector Service"
+#>
 
 # Download New Teams files
 $url = "https://go.microsoft.com/fwlink/?linkid=2243204&clcid=0x409"
@@ -64,11 +65,11 @@ foreach ($Key in (Get-ChildItem $regLocation) ) {
       $webRTCInstall = $true
     }
   } 
-if($webRTCInstall){
+<#if($webRTCInstall){
     Write-Output "WebRTC installed"
 } else {
     Write-Output "WebRTC installation failed"
-  }
+  }#>
 
   foreach ($Key in (Get-ChildItem $regLocation) ) {
     if ($Key.GetValue('DisplayName') -like '*Microsoft Teams Meeting Add-in for Microsoft Office*') {
