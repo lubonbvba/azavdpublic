@@ -1,247 +1,259 @@
-# Ninja Uninstall Script with support for removing TeamViewer if '-DelTeamViewer' parameter is used
-# to be deleted:
-# Usage: [-Uninstall] [-Cleanup] [-DelTeamViewer]
-#   -Uninstall calls msiexec {ninjaRmmAgent product ID}
-#   -Cleanup removes keys, files, services 
-#   -DelTeamViewer deletes TeamViewer
-# Examples:
-#
-# NewAgentRemoval.ps1 -Uninstall
-#   disables uninstall prevention and uninstalls using msiexec, does not check if there are any leftovers
-#
-# NewAgentRemoval.ps1 -Cleanup
-#   removes keys, files, services related to NinjaRMMProduct, does not use amy msiexec, uninstall prevention status is ignored
-#
-# NewAgentRemoval.ps1  -Uninstall -Cleanup
-#   combines two actions together
-#   order of arguments does not matter, msiexec is called first, cleanup goes second
-# https://github.com/samersultan/Ninja-One-Uninstall-Agent
+#Requires -RunAsAdministrator
 
-param (
-    [Parameter(Mandatory=$false)]
-    [switch]$DelTeamViewer = $false,
-	[Parameter(Mandatory=$false)]
-	[switch]$Cleanup,
-	[Parameter(Mandatory=$false)]
-	[switch]$Uninstall,
-	[Parameter(Mandatory=$false)]
-	[switch]$ShowError
-)
+<#
+.SYNOPSIS
+    Uninstalls NinjaOne Agent (NinjaRMMAgent) from the system
+.DESCRIPTION
+    This script checks for the presence of NinjaOne Agent, disables uninstall protection,
+    and performs a silent uninstall without user interaction.
+.NOTES
+    File Name      : UninstallNinjaOneAgentAVD.ps1
+    Author         : Generated Script
+    Prerequisite   : PowerShell 5.0 or higher, Administrator privileges
+    Version        : 1.0
+#>
 
-$ErrorActionPreference = 'SilentlyContinue'
-
-if($ShowError -eq $true) {
-    $ErrorActionPreference = 'Continue'
-}
-
-Write-Progress -Activity "Running Ninja Removal Script" -PercentComplete 0
-
-#Set-PSDebug -Trace 2
-
-if([system.environment]::Is64BitOperatingSystem)
-{
-    $ninjaPreSoftKey = 'HKLM:\SOFTWARE\WOW6432Node\NinjaRMM LLC'
-    $uninstallKey = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
-    $exetomsiKey = 'HKLM:\SOFTWARE\WOW6432Node\EXEMSI.COM\MSI Wrapper\Installed'
-}
-else
-{
-    $ninjaPreSoftKey = 'HKLM:\SOFTWARE\NinjaRMM LLC'
-    $uninstallKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall'
-    $exetomsiKey = 'HKLM:\SOFTWARE\EXEMSI.COM\MSI Wrapper\Installed'
-}
-
-$ninjaSoftKey = Join-Path $ninjaPreSoftKey -ChildPath 'NinjaRMMAgent'
-
-$ninjaDir = [string]::Empty
-$ninjaDataDir = Join-Path -Path $env:ProgramData -ChildPath "NinjaRMMAgent"
-
-###################################################################################################
-# locating NinjaRMMAgent
-###################################################################################################
-$ninjaDirRegLocation = $(Get-ItemPropertyValue $ninjaSoftKey -Name Location) 
-if($ninjaDirRegLocation)
-{
-    if(Join-Path -Path $ninjaDirRegLocation -ChildPath "NinjaRMMAgent.exe" | Test-Path)
-    {
-        #location confirmed from registry location
-        $ninjaDir = $ninjaDirRegLocation
-    }
-}
-
-Write-Progress -Activity "Running Ninja Removal Script" -PercentComplete 10
-
-if(!$ninjaDir)
-{
-    #attempt to get the path from service
-    $ss = Get-WmiObject win32_service -Filter 'Name Like "NinjaRMMAgent"'
-    if($ss)
-    {
-        $ninjaDirService = ($(Get-WmiObject win32_service -Filter 'Name Like "NinjaRMMAgent"').PathName | Split-Path).Replace("`"", "")
-        if(Join-Path -Path $ninjaDirService -ChildPath "NinjaRMMAgentPatcher.exe" | Test-Path)
-        {
-            #location confirmed from service location
-            $ninjaDir = $ninjaDirService
-        }
-    }
-}
-
-if($ninjaDir)
-{
-    $ninjaDir.Replace('/','\')
-}
-
-if($Uninstall)
-{
-    Write-Progress -Activity "Running Ninja Removal Script" -Status "Running Uninstall" -PercentComplete 25
-    #there are few measures agent takes to prevent accidental uninstllation
-    #disable those measures now
-    #it automatically takes care if those measures are already removed
-    #it is not possible to check those measures outside of the agent since agent's development comes parralel to this script
-    Start-Process (Join-Path $ninjaDir "NinjaRMMAgent.exe") -ArgumentList "-disableUninstallPrevention", "NOUI"
-    # Executes uninstall.exe in Ninja install directory
-    $Arguments = @(
-        "/uninstall"
-        $(Get-WmiObject -Class win32_product -Filter "Name='NinjaRMMAgent'").IdentifyingNumber
-        "/quiet"
-        "/log"
-        "NinjaRMMAgent_uninstall.log"
-        "/L*v"
-        "WRAPPED_ARGUMENTS=`"--mode unattended`""
+# Function to write log messages
+function Write-Log {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO"
     )
-Start-Process -FilePath "msiexec.exe"  -Verb RunAs -Wait -NoNewWindow -WhatIf -ArgumentList $Arguments
-Write-Progress -Activity "Running Ninja Removal Script" -Status "Uninstall Completed" -PercentComplete 40
-Start-Sleep 1
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[$timestamp] [$Level] $Message"
 }
 
+# Function to check if NinjaRMMAgent process is running
+function Test-NinjaAgentProcess {
+    Write-Log "Checking if NinjaRMMAgent.exe process is running..."
+    $process = Get-Process -Name "NinjaRMMAgent" -ErrorAction SilentlyContinue
+    if ($process) {
+        Write-Log "NinjaRMMAgent.exe process is currently running (PID: $($process.Id))" -Level "WARNING"
+        return $true
+    } else {
+        Write-Log "NinjaRMMAgent.exe process is not running"
+        return $false
+    }
+}
 
-if($Cleanup)
-{
-    Write-Progress -Activity "Running Ninja Removal Script" -Status "Running Cleanup" -PercentComplete 50
-    $service=Get-Service "NinjaRMMAgent"
-    if($service)
-    {
-        Stop-Service $service -Force
-        & sc.exe DELETE NinjaRMMAgent
-        #Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NinjaRMMAgent
-    }
-    $proxyservice=Get-Process "NinjaRMMProxyProcess64"
-    if($proxyservice)
-    {
-        Stop-Process $proxyservice -Force
-    }
-    $nmsservice=Get-Service "nmsmanager"
-    if($nmsservice)
-    {
-        Stop-Service $nmsservice -Force
-        & sc.exe DELETE nmsmanager
-    }
-    # Delete Ninja install directory and all contents
-    if(Test-Path $ninjaDir)
-    {
-        & cmd.exe /c rd /s /q $ninjaDir
-    }
-
-    if(Test-Path $ninjaDataDir)
-    {
-        & cmd.exe /c rd /s /q $ninjaDataDir
-    }
-
-    #Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\NinjaRMM LLC\NinjaRMMAgent
-    Remove-Item -Path  -Recurse -Force
-
-    # Will search registry locations for NinjaRMMAgent value and delete parent key
-    # Search $uninstallKey
-    $keys = Get-ChildItem $uninstallKey | Get-ItemProperty -name 'DisplayName'
-    foreach ($key in $keys) {
-        if ($key.'DisplayName' -eq 'NinjaRMMAgent'){
-            Remove-Item $key.PSPath -Recurse -Force
+# Function to check if NinjaOne Agent is installed via registry
+function Test-NinjaAgentInstalled {
+    Write-Log "Checking registry for NinjaOne Agent installation..."
+    
+    $registryPaths = @(
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+    )
+    
+    foreach ($path in $registryPaths) {
+        $installedPrograms = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue | 
+                           Where-Object { $_.DisplayName -like "*NinjaRMM*" }
+        
+        if ($installedPrograms) {
+            foreach ($program in $installedPrograms) {
+                Write-Log "Found NinjaOne Agent: $($program.DisplayName) - Version: $($program.DisplayVersion)"
+                return $program
             }
+        }
     }
+    
+    Write-Log "NinjaOne Agent not found in registry"
+    return $null
+}
 
-    #Search $installerKey
-    $keys = Get-ChildItem 'HKLM:\SOFTWARE\Classes\Installer\Products' | Get-ItemProperty -name 'ProductName'
-    foreach ($key in $keys) {
-        if ($key.'ProductName' -eq 'NinjaRMMAgent'){
-            Remove-Item $key.PSPath -Recurse -Force
+# Function to find NinjaRMMAgent.exe location
+function Find-NinjaAgentExecutable {
+    Write-Log "Searching for NinjaRMMAgent.exe..."
+    
+    # First, check the registry for the installation location
+    try {
+        $registryPath = "HKLM:\SOFTWARE\WOW6432Node\NinjaRMM LLC\NinjaRMMAgent"
+        $locationProperty = Get-ItemProperty -Path $registryPath -Name "Location" -ErrorAction SilentlyContinue
+        
+        if ($locationProperty -and $locationProperty.Location) {
+            $installPath = $locationProperty.Location
+            $executablePath = Join-Path $installPath "NinjaRMMAgent.exe"
+            
+            if (Test-Path $executablePath) {
+                Write-Log "Found NinjaRMMAgent.exe via registry at: $executablePath"
+                return $executablePath
+            } else {
+                Write-Log "Registry location found ($installPath) but NinjaRMMAgent.exe not found there" -Level "WARNING"
             }
-    }
-    # Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Products\A0313090625DD2B4F824C1EAE0958B08\InstallProperties
-    $keys = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Products'
-    foreach ($key in $keys) {
-        $kn = $key.Name -replace 'HKEY_LOCAL_MACHINE' , 'HKLM:'; 
-        $k1 = Join-Path $kn -ChildPath 'InstallProperties';
-        if( $(Get-ItemProperty -Path $k1 -Name DisplayName).DisplayName -eq 'NinjaRMMAgent')
-        {
-            Get-Item -LiteralPath $kn | Remove-Item -Recurse -Force
+        } else {
+            Write-Log "NinjaRMMAgent installation location not found in registry"
         }
     }
-
-    #Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\EXEMSI.COM\MSI Wrapper\Installed\NinjaRMMAgent 5.3.3681
-    Get-ChildItem $exetomsiKey | Where-Object -Property Name -CLike '*NinjaRMMAgent*'  | Remove-Item -Recurse -Force
-
-    #HKLM:\SOFTWARE\WOW6432Node\NinjaRMM LLC
-    Get-Item -Path $ninjaPreSoftKey | Remove-Item -Recurse -Force
-
-    # agent creates this key by mistake but we delete it here
-    Get-Item -Path "HKLM:\SOFTWARE\WOW6432Node\WOW6432Node\NinjaRMM LLC" | Remove-Item -Recurse -Force
-
-Write-Progress -Activity "Running Ninja Removal Script" -Status "Cleanup Completed" -PercentComplete 75
-Start-Sleep 1
+    catch {
+        Write-Log "Error reading NinjaRMMAgent location from registry: $($_.Exception.Message)" -Level "WARNING"
+    }
+    
+    # Last resort: Try to find via running process
+    $process = Get-Process -Name "NinjaRMMAgent" -ErrorAction SilentlyContinue
+    if ($process) {
+        $executablePath = $process.MainModule.FileName
+        Write-Log "Found NinjaRMMAgent.exe via running process at: $executablePath"
+        return $executablePath
+    }
+    
+    Write-Log "NinjaRMMAgent.exe not found in registry, common locations, or running processes" -Level "WARNING"
+    return $null
 }
 
-if(Get-Item -Path $ninjaPreSoftKey)
-{
-    Write-Output "Failed to remove NinjaRMMAgent reg keys ", $ninjaPreSoftKey
-}
-
-if(Get-Service "NinjaRMMAgent")
-{
-    Write-Output "Failed to remove NinjaRMMAgent service"
-}
-
-if($ninjaDir)
-{
-    if(Test-Path $ninjaDir)
-    {
-        Write-Output "Failed to remove NinjaRMMAgent program folder"
-        if(Join-Path -Path $ninjaDir -ChildPath "NinjaRMMAgent.exe" | Test-Path)
-        {
-            Write-Output "Failed to remove NinjaRMMAgent.exe"
+# Function to disable uninstall protection
+function Disable-UninstallProtection {
+    param([string]$AgentPath)
+    
+    Write-Log "Attempting to disable uninstall protection..."
+    
+    try {
+        $arguments = "-disableUninstallPrevention NOUI"
+        Write-Log "Running: `"$AgentPath`" $arguments"
+        
+        $processInfo = Start-Process -FilePath $AgentPath -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+        
+        if ($processInfo.ExitCode -eq 0 -or $processInfo.ExitCode -eq 1) {
+            Write-Log "Successfully disabled uninstall protection (Exit code: $($processInfo.ExitCode))"
+            return $true
+        } else {
+            Write-Log "Failed to disable uninstall protection. Exit code: $($processInfo.ExitCode)" -Level "ERROR"
+            return $false
         }
-
-        if(Join-Path -Path $ninjaDir -ChildPath "NinjaRMMAgentPatcher.exe" | Test-Path)
-        {
-            Write-Output "Failed to remove NinjaRMMAgentPatcher.exe"
-        }
+    }
+    catch {
+        Write-Log "Error disabling uninstall protection: $($_.Exception.Message)" -Level "ERROR"
+        return $false
     }
 }
 
-# Uninstall TeamViewer only if -DelTeamViewer parameter specified
-if($DelTeamViewer -eq $true){
-Write-Progress -Activity "Running Ninja Removal Script" -Status "TeamViewer Removal Starting" -PercentComplete 80
-    $tvProcess = Get-Process -Name 'teamviewer*'
-    Stop-Process -InputObject $tvProcess -Force # Stops TeamViewer process
-# Call uninstaller - 32/64-bit (if exists)
-$tv64Uninstaller = Test-Path ${env:ProgramFiles(x86)}"\TeamViewer\uninstall.exe"
-if ($tv64Uninstaller) {
-    & ${env:ProgramFiles(x86)}"\TeamViewer\uninstall.exe" /S | out-null
-}
-$tv32Uninstaller = Test-Path ${env:ProgramFiles}"\TeamViewer\uninstall.exe"
-if ($tv32Uninstaller) {
-    & ${env:ProgramFiles}"\TeamViewer\uninstall.exe" /S | out-null
-}
-# Ensure all registry keys have been removed - 32/64-bit (if exists)
-    Remove-Item -path HKLM:\SOFTWARE\TeamViewer -Recurse
-    Remove-Item -path HKLM:\SOFTWARE\WOW6432Node\TeamViewer -Recurse 
-    Remove-Item -path HKLM:\SOFTWARE\WOW6432Node\TVInstallTemp -Recurse 
-    Remove-Item -path HKLM:\SOFTWARE\TeamViewer -Recurse
-    Remove-Item -path HKLM:\SOFTWARE\Wow6432Node\TeamViewer -Recurse
-Write-Progress -Activity "Running Ninja Removal Script" -Status "TeamViewer Removal Completed" -PercentComplete 90
-Start-Sleep 1
+# Function to uninstall NinjaOne Agent
+function Uninstall-NinjaAgent {
+    param($InstalledProgram)
+    
+    Write-Log "Attempting to uninstall NinjaOne Agent..."
+    
+    try {
+        $uninstallString = $InstalledProgram.UninstallString
+        
+        if ([string]::IsNullOrEmpty($uninstallString)) {
+            Write-Log "No uninstall string found in registry" -Level "ERROR"
+            return $false
+        }
+        
+        Write-Log "Uninstall string: $uninstallString"
+        
+        # Parse the MSI uninstall string to extract the product code
+        if ($uninstallString -match "MsiExec.exe.*?(\{[^}]+\})") {
+            $productCode = $matches[1]
+            $arguments = "/x $productCode /quiet /norestart"
+            $executable = "msiexec.exe"
+            
+            Write-Log "Running MSI uninstall: $executable $arguments"
+            $processInfo = Start-Process -FilePath $executable -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+            
+            if ($processInfo.ExitCode -eq 0) {
+                Write-Log "Successfully uninstalled NinjaOne Agent"
+                return $true
+            } else {
+                Write-Log "Uninstall completed with exit code: $($processInfo.ExitCode)" -Level "WARNING"
+                return $true  # Many uninstallers return non-zero even on success
+            }
+        } else {
+            Write-Log "Could not extract product code from MSI uninstall string" -Level "ERROR"
+            return $false
+        }
+    }
+    catch {
+        Write-Log "Error during uninstallation: $($_.Exception.Message)" -Level "ERROR"
+        return $false
+    }
 }
 
-Write-Progress -Activity "Running Ninja Removal Script" -Status "Completed" -PercentComplete 100
-Start-Sleep 1
+# Function to verify uninstallation
+function Test-UninstallSuccess {
+    Write-Log "Verifying uninstallation..."
+    
+    # Check if process is still running
+    $processRunning = Test-NinjaAgentProcess
+    
+    # Check if still in registry
+    $stillInstalled = Test-NinjaAgentInstalled
+    
+    if (-not $processRunning -and -not $stillInstalled) {
+        Write-Log "NinjaOne Agent successfully uninstalled" -Level "SUCCESS"
+        return $true
+    } else {
+        Write-Log "NinjaOne Agent may not have been completely uninstalled" -Level "WARNING"
+        return $false
+    }
+}
 
-$error | out-file C:\Windows\Temp\NinjaRemovalScriptError.txt
+# Main execution
+Write-Log "Starting NinjaOne Agent uninstallation process..."
+
+# Check if running as administrator
+if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Log "This script requires Administrator privileges. Please run as Administrator." -Level "ERROR"
+    exit 1
+}
+
+# Step 1: Check if agent process is running
+$isProcessRunning = Test-NinjaAgentProcess
+
+# Step 2: Check if agent is installed via registry
+$installedProgram = Test-NinjaAgentInstalled
+
+if (-not $installedProgram) {
+    Write-Log "NinjaOne Agent does not appear to be installed on this system"
+    
+    if ($isProcessRunning) {
+        Write-Log "However, NinjaRMMAgent.exe process is running. It will be stopped during uninstallation."
+    }
+    
+    exit 0
+}
+
+# Step 3: Find NinjaRMMAgent.exe location
+$agentPath = Find-NinjaAgentExecutable
+
+if ($agentPath) {
+    # Step 4: Disable uninstall protection (this will update the registry uninstall string)
+    $protectionDisabled = Disable-UninstallProtection -AgentPath $agentPath
+    
+    if (-not $protectionDisabled) {
+        Write-Log "Warning: Could not disable uninstall protection. Proceeding with uninstallation anyway..." -Level "WARNING"
+    }
+    
+    # Give some time for the protection to be disabled and registry to be updated
+    Start-Sleep -Seconds 3
+    
+    # Step 5: Re-read the registry to get the updated uninstall string
+    Write-Log "Re-reading registry for updated uninstall information after disabling protection..."
+    $installedProgram = Test-NinjaAgentInstalled
+    
+    if (-not $installedProgram) {
+        Write-Log "Warning: Could not find updated registry information after disabling protection" -Level "WARNING"
+    }
+} else {
+    Write-Log "Warning: Could not find NinjaRMMAgent.exe to disable uninstall protection" -Level "WARNING"
+}
+
+# Step 6: Perform silent uninstallation using updated registry information
+$uninstallSuccess = Uninstall-NinjaAgent -InstalledProgram $installedProgram
+
+if ($uninstallSuccess) {
+    # Step 7: Verify uninstallation
+    Start-Sleep -Seconds 10  # Wait for uninstaller to complete
+    $verificationSuccess = Test-UninstallSuccess
+    
+    if ($verificationSuccess) {
+        Write-Log "NinjaOne Agent uninstallation completed successfully!" -Level "SUCCESS"
+        exit 0
+    } else {
+        Write-Log "Uninstallation may have completed but verification failed" -Level "WARNING"
+        exit 2
+    }
+} else {
+    Write-Log "Failed to uninstall NinjaOne Agent" -Level "ERROR"
+    exit 1
+}
