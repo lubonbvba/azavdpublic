@@ -8,6 +8,7 @@ $uninstalledPrograms = @(
     "Remote Desktop Services SxS Network Stack",
     "Microsoft Intune Management Extension",
     "System Settings Proxy"
+    "RDP Redirections SxS Stack"
 )
 
 # Uninstall programs
