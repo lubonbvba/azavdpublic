@@ -22,6 +22,8 @@ if(Get-AppxPackage -AllUsers -Name "*MSTEAMS*"){
 # Create working dir
 $workingDir = "C:\Temp\AVD\Teams"
 New-Item -ItemType Directory -Path $workingDir -Force
+# Clean up any existing content
+Get-ChildItem -Path $workingDir -Recurse | Remove-Item -Force -Recurse
 
 # Download New Teams files
 $url = "https://go.microsoft.com/fwlink/?linkid=2243204&clcid=0x409"
