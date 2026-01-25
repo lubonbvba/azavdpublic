@@ -2,7 +2,7 @@
 
 param(
     [Parameter(Mandatory = $true, Position = 1, HelpMessage = "Specify Office channel, Monthly Enterprise (MEC) or Semi-Annual Enterprise Channel (SEC) ")]
-    [ValidateSet("MEC", "SEC")]
+    [ValidateSet("MEC", "MEC-en" , "SEC")]
     [string]$channel = "SEC"
 )
 
@@ -52,6 +52,13 @@ if($channel -eq "MEC"){
     Write-Log -Message "Downloading Office Monthly Enterprise configuration file" -Type 'INFO'
     $MECUrl = "https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/Office/Configuration-Monthly-Enterprise.xml"
     $configXMLFile = "Configuratie-Monthly-Enterprise.xml" 
+    Invoke-WebRequest -Uri $MECUrl -OutFile "$workingDir\$configXMLFile"
+}
+
+if($channel -eq "MEC-en"){
+    Write-Log -Message "Downloading Office Monthly Enterprise configuration file" -Type 'INFO'
+    $MECUrl = "https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/Office/Configuration-Monthly-Enterprise-en-only.xml"
+    $configXMLFile = "Configuratie-Monthly-Enterprise-en-only.xml" 
     Invoke-WebRequest -Uri $MECUrl -OutFile "$workingDir\$configXMLFile"
 }
 
