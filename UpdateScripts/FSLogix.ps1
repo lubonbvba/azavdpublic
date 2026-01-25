@@ -8,7 +8,23 @@ Notes:
 This script installs or updates FSLogix on AVD Session host and reboots the host if needed.
 #>
 
-$FslogixUrl = "https://aka.ms/fslogix_download"
+param(
+    [Parameter(Mandatory = $false)]
+    [ValidateSet('latest', 'v25', 'v22')]
+    [string]$FslogixVersion = "latest"
+)
+
+# Determine FSLogix download URL based on version parameter
+if ($FslogixVersion -eq "v25") {
+    $FslogixUrl = "https://download.microsoft.com/download/8fc0f8ba-e928-4aa7-8b85-f6655b6a15ab/FSLogix_25.09.zip"
+}
+# FSLogix 2210 hotfix 4
+elseif ($FslogixVersion -eq "v22") {
+    $FslogixUrl = "https://download.microsoft.com/download/e/c/4/ec4b55b3-d2f3-4610-aebd-56478eb0d582/FSLogix_Apps_2.9.8884.27471.zip"
+}
+else {
+    $FslogixUrl = "https://aka.ms/fslogix_download"
+}
 
 # Start powershell logging
 $SaveVerbosePreference = $VerbosePreference
@@ -26,10 +42,10 @@ Start-Transcript -Path "C:\Windows\temp\fslogix\ScriptedActions\fslogix\ps_log.t
 Write-Host "################# New Script Run #################"
 Write-host "Current time (UTC-0): $LogTime"
 
-Invoke-WebRequest -Uri $FslogixUrl -OutFile "$FslogixWorkingDir\FSLogixAppsSetup.zip" -UseBasicParsing
+Invoke-WebRequest -Uri $FslogixUrl -OutFile "$FslogixWorkingDir\FSLogixAppsSetup_$FslogixVersion.zip" -UseBasicParsing
 
 Expand-Archive `
-    -LiteralPath "$FslogixWorkingDir\FSLogixAppsSetup.zip" `
+    -LiteralPath "$FslogixWorkingDir\FSLogixAppsSetup_$FslogixVersion.zip" `
     -DestinationPath $FslogixWorkingDir `
     -Force `
     -Verbose
