@@ -6,7 +6,7 @@
 # https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool
 
 # Download VDOT
-$URL = 'https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
+$URL = 'https://github.com/lubon-public/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
 $ZIP = 'VDOT.zip'
 Invoke-WebRequest -Uri $URL -OutFile $ZIP
 
@@ -23,7 +23,7 @@ $appxPackagesToDisable = @(
     "Microsoft.GamingApp",
     "Microsoft.Getstarted",
     "Microsoft.MicrosoftSolitaireCollection",
-    "Microsoft.OutlookForWindows",
+    #"Microsoft.OutlookForWindows",
     "Microsoft.People",
     "Microsoft.PowerAutomateDesktop",
     "Microsoft.SkypeApp",
