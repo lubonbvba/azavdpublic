@@ -6,7 +6,7 @@ New-Item -ItemType Directory -Path $workingDir -Force
 
 # Download latest version
 $URL = "https://eid.belgium.be/sites/default/files/software/Belgium%20eID-QuickInstaller%205.1.23.6205.exe"
-$setup = "Belgium eID-QuickInstaller 5.1.23.6205"
+$setup = "Belgium eID-QuickInstaller 5.1.23.6205.exe"
 Invoke-WebRequest -Uri $URL -OutFile "$workingDir\$setup"
 
 $URLViewer = "https://eid.belgium.be/sites/default/files/software/Belgium%20eID%20Viewer%20Installer%205.1.14.6111.exe"
