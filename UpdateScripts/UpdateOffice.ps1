@@ -65,7 +65,13 @@ else {
         Start-Sleep -Seconds 5
     } while ($OfficeProcesses.Count -ne 1)
 
-    Start-Sleep -Seconds 300
+    # Poll the installed version until it matches the target build (timeout: 6 minutes)
+    Write-Host "Waiting for Office version to reach $latestBuild..."
+    $timeout = (Get-Date).AddMinutes(6)
+    do {
+        Start-Sleep -Seconds 10
+        $checkVersion = Get-OfficeVersion
+    } while ($checkVersion -ne $latestBuild -and (Get-Date) -lt $timeout)
 
     Write-Host "Update process finished."
 

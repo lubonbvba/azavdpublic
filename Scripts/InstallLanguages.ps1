@@ -69,11 +69,59 @@ Set-TimeZone -Id "Romance Standard Time" -PassThru
 Disable-ScheduledTask -TaskPath "\Microsoft\Windows\AppxDeploymentClient\" -TaskName "Pre-staged app cleanup" | Out-Null
 
 # Download and install the Language Packs
+$maxRetries = 3
+$anyFailed = $false
 foreach ($language in $languagePacksToInstall)
 {
-Write-Host "Installing Language Pack for: $language"
-Install-Language $language
-Write-Host "Installing Language Pack for: $language completed."
+    $attempt = 0
+    $installed = $false
+    while (-not $installed -and $attempt -lt $maxRetries) {
+        $attempt++
+        Write-Host "Installing Language Pack for: $language (attempt $attempt of $maxRetries)"
+        try {
+            Install-Language $language -ErrorAction Stop
+            $installed = $true
+            Write-Host "Installing Language Pack for: $language completed."
+        } catch {
+            Write-Host "Failed to install language pack for: $language. Error: $_"
+            if ($attempt -lt $maxRetries) {
+                Write-Host "Retrying in 30 seconds..."
+                Start-Sleep -Seconds 30
+            } else {
+                Write-Host "ERROR: Failed to install language pack for: $language after $maxRetries attempts."
+                $anyFailed = $true
+            }
+        }
+    }
+}
+
+# If any language pack failed, reboot once and run the script again
+$rebootRegPath = "HKLM:\SOFTWARE\AVD\LanguageInstall"
+if ($anyFailed) {
+    if (-not (Test-Path $rebootRegPath)) {
+        New-Item -Path $rebootRegPath -Force | Out-Null
+        Write-Host "Language pack installation failed. Scheduling rerun after reboot..."
+
+        $scriptPath = $MyInvocation.MyCommand.Path
+        $langParam = ($languagePacks -join "','")
+        $psArgs = "-ExecutionPolicy Bypass -File `"$scriptPath`" -languagePacks '$langParam' -defaultLanguage '$defaultLanguage'"
+        $action    = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument $psArgs
+        $trigger   = New-ScheduledTaskTrigger -AtStartup
+        $settings  = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+        $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+        Register-ScheduledTask -TaskName "ReinstallLanguagePacks" -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
+        Write-Host "Rebooting in 30 seconds..."
+        Stop-Transcript
+        $VerbosePreference = $SaveVerbosePreference
+        shutdown /r /t 30 /c "Rebooting to retry language pack installation"
+        exit
+    } else {
+        Write-Host "ERROR: Language pack installation failed after reboot retry. Check logs for details."
+    }
+} else {
+    # All language packs installed successfully — clean up retry state
+    if (Test-Path $rebootRegPath) { Remove-Item -Path $rebootRegPath -Force }
+    Unregister-ScheduledTask -TaskName "ReinstallLanguagePacks" -Confirm:$false -ErrorAction SilentlyContinue
 }
 
 if ($defaultLanguage -eq $null)
