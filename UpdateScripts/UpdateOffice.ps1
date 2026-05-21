@@ -39,7 +39,14 @@ $CloudVersionInfo = Invoke-RestMethod 'https://clients.config.office.net/release
 # Check if update is needed
 $currentVersion = Get-OfficeVersion
 $officeChannel = Get-OfficeUpdateChannel
-$LatestBuild = $CloudVersionInfo | Where-Object { $_.channelId -eq $officeChannel } | Select-Object -ExpandProperty latestVersion
+
+if ($officeChannel -eq "SemiAnnual") {
+    Write-Output "SemiAnnual Channel builds are not listed anymore in API set manually"
+    $LatestBuild = "16.0.19127.20648"
+} else {
+    $LatestBuild = $CloudVersionInfo | Where-Object { $_.channelId -eq $officeChannel } | Select-Object -ExpandProperty latestVersion
+}
+
 if ($currentVersion -eq $LatestBuild) {
     Write-Output "Currently using the latest version of Office in the '$officeChannel' Channel: $currentVersion"
 }
@@ -50,7 +57,7 @@ else {
 
     # Path to the OfficeC2RClient executable
     $OfficeC2RClientPath = "C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe"
-    $Arguments = "/update user updatetoversion=$latestBuild displaylevel=false forceappshutdown=true"
+    $Arguments = "/update user updatetoversion=$LatestBuild displaylevel=false forceappshutdown=true"
 
     # Start the update process
     Write-Host "Starting Office 365 update to build $latestBuild from channel '$officeChannel'..."
