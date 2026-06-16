@@ -593,7 +593,7 @@ try {
         ##############################################################
         # Disabling this method for installing the AVD agent until EntraID Join can completed successfully
         $BootInstaller = 'AVD-Bootloader.msi'
-        Get-WebFile -FileName $BootInstaller -URL 'https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrxrH'
+        Get-WebFile -FileName $BootInstaller -URL 'https://go.microsoft.com/fwlink/?linkid=2311028'
         Start-Process -FilePath 'msiexec.exe' -ArgumentList "/i $BootInstaller /quiet /qn /norestart /passive" -Wait -Passthru
         Write-Log -Message 'Installed AVD Bootloader' -Category 'INFO'
         Start-Sleep -Seconds 5
