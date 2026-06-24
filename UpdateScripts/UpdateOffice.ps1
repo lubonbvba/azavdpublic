@@ -42,7 +42,7 @@ $officeChannel = Get-OfficeUpdateChannel
 
 if ($officeChannel -eq "SemiAnnual") {
     Write-Output "SemiAnnual Channel builds are not listed anymore in API set manually"
-    $LatestBuild = "16.0.19127.20648"
+    $LatestBuild = "16.0.19127.20678"
 } else {
     $LatestBuild = $CloudVersionInfo | Where-Object { $_.channelId -eq $officeChannel } | Select-Object -ExpandProperty latestVersion
 }
