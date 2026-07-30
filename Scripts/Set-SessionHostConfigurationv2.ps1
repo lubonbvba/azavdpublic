@@ -160,7 +160,7 @@ try {
         # https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool
 
         # Don't run vdot on server os
-        if((Get-ComputerInfo).WindowsInstallationType -eq "Client"){
+        if ((Get-ComputerInfo).WindowsInstallationType -eq "Client" -and $env:COMPUTERNAME -notlike "alrti-*"){
 
                 # Download VDOT
                 $URL = 'https://github.com/lubon-public/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
