@@ -35,6 +35,10 @@ Param(
         [string]
         $ExtendOsDisk
 
+        [parameter(Mandatory = $false)]
+        [switch]
+        $runVDOT = $false
+
         # [parameter(Mandatory)]
         # [string]
         # $ScreenCaptureProtection
@@ -160,7 +164,7 @@ try {
         # https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool
 
         # Don't run vdot on server os
-        if ((Get-ComputerInfo).WindowsInstallationType -eq "Client" -and $env:COMPUTERNAME -notlike "alrti-*"){
+        if ($runVDOT -and (Get-ComputerInfo).WindowsInstallationType -eq "Client"){
 
                 # Download VDOT
                 $URL = 'https://github.com/lubon-public/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
@@ -238,9 +242,11 @@ try {
                 }           
                 
                 Write-Log -Message 'Optimized the operating system using VDOT' -Category 'INFO'
+       } elseif (!$runVDOT) {
+                Write-Log -Message 'runVDOT switch not provided, skip VDOT' -Category 'INFO'
         } else {
                 Write-Log -Message 'Server Os detected skip VDOT' -Category 'INFO'
-        }  
+        }
 
         ##############################################################
         #  Add Recommended AVD Settings
