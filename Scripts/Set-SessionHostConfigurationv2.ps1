@@ -33,7 +33,7 @@ Param(
 
         [parameter(Mandatory = $false)]
         [string]
-        $ExtendOsDisk
+        $ExtendOsDisk,
 
         [parameter(Mandatory = $false)]
         [switch]
