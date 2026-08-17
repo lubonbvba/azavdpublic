@@ -163,8 +163,8 @@ try {
         ##############################################################
         # https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool
 
-        # Only run VDOT when -runVDOT switch is provided, and not on server os
-        if($runVDOT -and (Get-ComputerInfo).WindowsInstallationType -eq "Client"){
+        # Don't run vdot on server os
+        if ($runVDOT -and (Get-ComputerInfo).WindowsInstallationType -eq "Client"){
 
                 # Download VDOT
                 $URL = 'https://github.com/lubon-public/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
@@ -242,6 +242,8 @@ try {
                 }           
                 
                 Write-Log -Message 'Optimized the operating system using VDOT' -Category 'INFO'
+       } elseif (!$runVDOT) {
+                Write-Log -Message 'runVDOT switch not provided, skip VDOT' -Category 'INFO'
         } elseif (!$runVDOT) {
                 Write-Log -Message 'runVDOT switch not provided, skip VDOT' -Category 'INFO'
         } else {
