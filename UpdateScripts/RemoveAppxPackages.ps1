@@ -5,6 +5,7 @@
 $appxPackagesToDisable = @(
 "Microsoft.Windows.DevHome",
 "Microsoft.OutlookForWindows"
+"Microsoft.MicrosoftOfficeHub" #copilot
 )
 
 

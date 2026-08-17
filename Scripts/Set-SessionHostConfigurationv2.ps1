@@ -33,7 +33,11 @@ Param(
 
         [parameter(Mandatory = $false)]
         [string]
-        $ExtendOsDisk
+        $ExtendOsDisk,
+
+        [parameter(Mandatory = $false)]
+        [switch]
+        $runVDOT = $false
 
         # [parameter(Mandatory)]
         # [string]
@@ -159,8 +163,8 @@ try {
         ##############################################################
         # https://github.com/The-Virtual-Desktop-Team/Virtual-Desktop-Optimization-Tool
 
-        # Don't run vdot on server os
-        if((Get-ComputerInfo).WindowsInstallationType -eq "Client"){
+        # Only run VDOT when -runVDOT switch is provided, and not on server os
+        if($runVDOT -and (Get-ComputerInfo).WindowsInstallationType -eq "Client"){
 
                 # Download VDOT
                 $URL = 'https://github.com/lubon-public/Virtual-Desktop-Optimization-Tool/archive/refs/heads/main.zip'
@@ -238,9 +242,11 @@ try {
                 }           
                 
                 Write-Log -Message 'Optimized the operating system using VDOT' -Category 'INFO'
+        } elseif (!$runVDOT) {
+                Write-Log -Message 'runVDOT switch not provided, skip VDOT' -Category 'INFO'
         } else {
                 Write-Log -Message 'Server Os detected skip VDOT' -Category 'INFO'
-        }  
+        }
 
         ##############################################################
         #  Add Recommended AVD Settings
@@ -593,7 +599,7 @@ try {
         ##############################################################
         # Disabling this method for installing the AVD agent until EntraID Join can completed successfully
         $BootInstaller = 'AVD-Bootloader.msi'
-        Get-WebFile -FileName $BootInstaller -URL 'https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrxrH'
+        Get-WebFile -FileName $BootInstaller -URL 'https://go.microsoft.com/fwlink/?linkid=2311028'
         Start-Process -FilePath 'msiexec.exe' -ArgumentList "/i $BootInstaller /quiet /qn /norestart /passive" -Wait -Passthru
         Write-Log -Message 'Installed AVD Bootloader' -Category 'INFO'
         Start-Sleep -Seconds 5

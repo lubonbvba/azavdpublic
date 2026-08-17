@@ -68,27 +68,59 @@ Set-TimeZone -Id "Romance Standard Time" -PassThru
 #Disable Language Pack Cleanup (do not re-enable)
 Disable-ScheduledTask -TaskPath "\Microsoft\Windows\AppxDeploymentClient\" -TaskName "Pre-staged app cleanup" | Out-Null
 
-# Download and install the Language Packs
+# Initialize stopwatch for performance tracking
+$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
+# Download and install the Language Packs with retry logic
 foreach ($language in $languagePacksToInstall)
 {
-Write-Host "Installing Language Pack for: $language"
-Install-Language $language
-Write-Host "Installing Language Pack for: $language completed."
+    Write-Host "Installing Language Pack for: $language"
+    $i = 1
+    while ($i -le 5) {
+        try {
+            Write-Host "Install language packs - Attempt: $i"
+            Install-Language $language -ErrorAction Stop
+            Write-Host "Installing Language Pack for: $language completed."
+            break
+        }
+        catch {
+            Write-Host "Install language packs - Exception occurred on attempt $i"
+            Write-Host $_.Exception.Message
+            if ($i -eq 5) {
+                Write-Host "Failed to install $language after 5 attempts. Moving to next language."
+                break
+            }
+        }
+        $i++
+    }
 }
 
+# Stop timing and report results
+$stopwatch.Stop()
+$elapsedTime = $stopwatch.Elapsed
+Write-Host "Install language packs - Exit Code: $LASTEXITCODE"
+Write-Host "Ending: Install language packs - Time taken: $elapsedTime"
+
+# NOTE: Do NOT call Set-SystemPreferredUILanguage with the target language. Per Microsoft docs
+# this cmdlet sets the preferred UI language for the system itself, including the Welcome screen
+# and system accounts (SYSTEM, Local Service, Network Service) - not just new user accounts, so
+# calling it would put SYSTEM back on $defaultLanguageToSet.
 if ($defaultLanguage -eq $null)
 {
 Write-Host "Default Language not configured."
 }
 else
 {
-Write-Host "Setting default Language to: $defaultLanguageToSet"
-Set-SystemPreferredUILanguage $defaultLanguageToSet
+Write-Host "Leaving system-wide preferred UI language on en-US (skipping Set-SystemPreferredUILanguage) so SYSTEM/perf counters stay English. New users will still get: $defaultLanguageToSet"
 }
 
-#Set all regional setting to default language
+#Set all regional setting to default language for the current (build) user - this gets copied to
+#the default new-user profile below via Copy-UserInternationalSettingsToSystem -NewUser $true
 Set-Culture -CultureInfo $defaultLanguageToSet
-Set-WinSystemLocale -SystemLocale $defaultLanguageToSet
+# NOTE: Do NOT change the system locale (Set-WinSystemLocale). Azure Monitor / AVD Insights
+# relies on English-localized performance counter names to parse metrics; changing the
+# system locale breaks that parsing. Keep the system locale on en-US and only localize
+# the UI language, culture and formats below.
 Set-WinUILanguageOverride -Language $defaultLanguageToSet
 Set-WinUserLanguageList -LanguageList $defaultLanguageToSet -Force
 Set-WinHomeLocation -GeoId $geoId
@@ -115,6 +147,27 @@ if($defaultLanguageToSet -eq "nl-BE"){
 }
 
 Copy-UserInternationalSettingsToSystem -WelcomeScreen $false -NewUser $True
+
+# --- Reset the account actually EXECUTING this script back to English ---
+# This script typically runs as SYSTEM (Custom Script Extension / scripted action). The Set-Culture /
+# Set-WinUILanguageOverride / Set-WinUserLanguageList calls above modified the executing account's OWN
+# live registry hive (HKCU while running as SYSTEM *is* SYSTEM's profile) to $defaultLanguageToSet, so
+# that Copy-UserInternationalSettingsToSystem -NewUser could propagate it into HKU\.DEFAULT for new
+# users. That leaves SYSTEM's own hive on $defaultLanguageToSet too - which is what caused Get-Counter
+# (and Azure Monitor/AVD Insights perf counters) to return localized names as SYSTEM. Now that propagation to .DEFAULT is done, force the
+# executing account's own culture/UI language/LocaleName back to English.
+$currentIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+if ($currentIdentity.IsSystem) {
+    Write-Host "Script is running as SYSTEM - resetting SYSTEM's own locale/UI language back to en-US now that $defaultLanguageToSet has been propagated to the default new-user profile."
+    Set-Culture -CultureInfo "en-US"
+    Set-WinUILanguageOverride -Language "en-US"
+    Set-WinUserLanguageList -LanguageList "en-US" -Force
+    Set-ItemProperty -Path "HKCU:\Control Panel\International" -Name "LocaleName" -Value "en-US"
+    Set-ItemProperty -Path "HKCU:\Control Panel\International" -Name "Locale" -Value "00000409"
+}
+else {
+    Write-Host "Script is not running as SYSTEM ($($currentIdentity.Name)) - skipping SYSTEM locale reset."
+}
 
 # End Logging
 Stop-Transcript
