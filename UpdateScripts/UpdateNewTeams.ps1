@@ -61,8 +61,29 @@ $TargetDir = "{0}\Microsoft\TeamsMeetingAddin\{1}\" -f ${env:ProgramFiles(x86)},
 $params = '/i "{0}" TARGETDIR="{1}" /qn ALLUSERS=1' -f $TMAPath, $TargetDir
 
 # Start the install process
-write-host "executing msiexec.exe $params"
-Start-Process msiexec.exe -ArgumentList $params -Wait
+$maxAttempts = 3
+$retryDelaySeconds = 5
+$installSucceeded = $false
+
+for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+    Write-Host "Executing msiexec.exe $params (attempt $attempt of $maxAttempts)"
+    $process = Start-Process msiexec.exe -ArgumentList $params -Wait -PassThru
+
+    if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
+        $installSucceeded = $true
+        break
+    }
+
+    Write-Host "Teams Meeting Add-in installation failed with exit code $($process.ExitCode)."
+    if ($attempt -lt $maxAttempts) {
+        Write-Host "Retrying in $retryDelaySeconds seconds..."
+        Start-Sleep -Seconds $retryDelaySeconds
+    }
+}
+
+if (-not $installSucceeded) {
+    Write-Output "Teams Meeting Add-in installation failed after $maxAttempts attempts"
+}
 
 # Check if installations are successfull
 $regLocation = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
