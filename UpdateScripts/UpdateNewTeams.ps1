@@ -40,6 +40,9 @@ If (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
   exit 1
 }
 
+Write-Host "Waiting five seconds for the new Teams package registration to complete..."
+Start-Sleep -Seconds 5
+
 # Get Version of currently installed new Teams Package
 if (-not ($NewTeamsPackageVersion = (Get-AppxPackage -Name MSTeams).Version)) {
   Write-Host "New Teams Package not found. Please install new Teams from https://aka.ms/GetTeams ."
