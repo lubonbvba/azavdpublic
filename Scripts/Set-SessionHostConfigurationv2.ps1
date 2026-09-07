@@ -607,7 +607,7 @@ try {
         Start-Sleep -Seconds 5
 
         $AgentInstaller = 'AVD-Agent.msi'
-        Get-WebFile -FileName $AgentInstaller -URL 'https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrmXv'
+        Get-WebFile -FileName $AgentInstaller -URL 'https://go.microsoft.com/fwlink/?linkid=2310011'
         Start-Process -FilePath 'msiexec.exe' -ArgumentList "/i $AgentInstaller /quiet /qn /norestart /passive REGISTRATIONTOKEN=$HostPoolRegistrationToken" -Wait -PassThru
         Write-Log -Message 'Installed AVD Agent' -Category 'INFO'
         Start-Sleep -Seconds 5
