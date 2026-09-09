@@ -610,7 +610,10 @@ try {
         Get-WebFile -FileName $AgentInstaller -URL 'https://go.microsoft.com/fwlink/?linkid=2310011'
         Start-Process -FilePath 'msiexec.exe' -ArgumentList "/i $AgentInstaller /quiet /qn /norestart /passive REGISTRATIONTOKEN=$HostPoolRegistrationToken" -Wait -PassThru
         Write-Log -Message 'Installed AVD Agent' -Category 'INFO'
-        Start-Sleep -Seconds 5
+        Write-Log -Message 'Waiting SxS Network Stack installation to complete' -Category 'INFO'
+        Start-Sleep -Seconds 60
+        $SxSNetworkStackInstall = Get-Package -Name "Remote Desktop Services SxS Network Stack"
+        Write-Log -Message "SxS Network Stack installed version $($SxSNetworkStackInstall.Version)" -Category 'INFO'
 
         ##############################################################
         #  Restart VM
