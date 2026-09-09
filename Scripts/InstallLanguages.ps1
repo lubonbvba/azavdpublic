@@ -31,7 +31,7 @@ param(
 
 # Define mapping from short code to full language code
 $languageMap = @{
-    "nl" = "nl-NL"
+    "nl" = @("nl-NL", "nl-BE")
     "fr" = "fr-BE"
     "en" = "en-BE"
     "de" = "de-DE"
