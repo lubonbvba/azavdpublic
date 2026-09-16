@@ -117,12 +117,10 @@ Write-Host "Leaving system-wide preferred UI language on en-US (skipping Set-Sys
 #Set all regional setting to default language for the current (build) user - this gets copied to
 #the default new-user profile below via Copy-UserInternationalSettingsToSystem -NewUser $true
 Set-Culture -CultureInfo $defaultLanguageToSet
-# NOTE: Do NOT change the system locale (Set-WinSystemLocale). Azure Monitor / AVD Insights
-# relies on English-localized performance counter names to parse metrics; changing the
-# system locale breaks that parsing. Keep the system locale on en-US and only localize
-# the UI language, culture and formats below.
+Set-WinSystemLocale -SystemLocale $defaultLanguageToSet
 Set-WinUILanguageOverride -Language $defaultLanguageToSet
 Set-WinUserLanguageList -LanguageList $defaultLanguageToSet -Force
+# Temporary set WinHomeLocation
 Set-WinHomeLocation -GeoId $geoId
 
 # Update the SYSTEM user registry with extra settings for nl-BE before copying the settings to new users
@@ -168,6 +166,8 @@ if ($currentIdentity.IsSystem) {
 else {
     Write-Host "Script is not running as SYSTEM ($($currentIdentity.Name)) - skipping SYSTEM locale reset."
 }
+# Reset the WinSystemLocale to ensure system performance counters stay in English (needed for AVD insights)
+Set-WinSystemLocale -SystemLocale "en-US"
 
 # End Logging
 Stop-Transcript
