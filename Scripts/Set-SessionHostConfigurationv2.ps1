@@ -242,8 +242,6 @@ try {
                 }           
                 
                 Write-Log -Message 'Optimized the operating system using VDOT' -Category 'INFO'
-       } elseif (!$runVDOT) {
-                Write-Log -Message 'runVDOT switch not provided, skip VDOT' -Category 'INFO'
         } elseif (!$runVDOT) {
                 Write-Log -Message 'runVDOT switch not provided, skip VDOT' -Category 'INFO'
         } else {
