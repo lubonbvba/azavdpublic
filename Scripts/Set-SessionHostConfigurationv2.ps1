@@ -610,8 +610,16 @@ try {
         Write-Log -Message 'Installed AVD Agent' -Category 'INFO'
         Write-Log -Message 'Waiting SxS Network Stack installation to complete' -Category 'INFO'
         Start-Sleep -Seconds 60
-        $SxSNetworkStackInstall = Get-Package -Name "Remote Desktop Services SxS Network Stack"
-        Write-Log -Message "SxS Network Stack installed version $($SxSNetworkStackInstall.Version)" -Category 'INFO'
+        try {
+                $SxSNetworkStackInstall = Get-Package -Name "Remote Desktop Services SxS Network Stack" -ErrorAction Stop
+                if ($SxSNetworkStackInstall) {
+                        Write-Log -Message "SxS Network Stack installed version $($SxSNetworkStackInstall.Version)" -Category 'INFO'
+                } else {
+                        Write-Log -Message 'SxS Network Stack not found; continuing without version confirmation' -Category 'INFO'
+                }
+        } catch {
+                Write-Log -Message "Unable to verify SxS Network Stack installation; continuing without version confirmation. Details: $($_.Exception.Message)" -Category 'WARN'
+        }
 
         ##############################################################
         #  Restart VM
