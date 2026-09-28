@@ -44,7 +44,7 @@ Write-Host "Waiting five seconds for the new Teams package registration to compl
 Start-Sleep -Seconds 5
 
 # Get Version of currently installed new Teams Package
-if (-not ($NewTeamsPackageVersion = (Get-AppxPackage -Name MSTeams).Version)) {
+if (-not ($NewTeamsPackageVersion = (Get-AppxPackage -AllUsers -Name MSTeams).Version)) {
   Write-Host "New Teams Package not found. Please install new Teams from https://aka.ms/GetTeams ."
   exit 1
 }
