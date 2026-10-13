@@ -3,7 +3,10 @@
 param(
     [Parameter(Mandatory = $true, Position = 1, HelpMessage = "Specify Office channel, Monthly Enterprise (MEC) or Semi-Annual Enterprise Channel (SEC) ")]
     [ValidateSet("MEC", "MEC-en" , "SEC")]
-    [string]$channel = "MEC"
+    [string]$channel = "MEC",
+
+    [Parameter(HelpMessage = "Also install Visio")]
+    [switch]$InstallVisio
 )
 
 # Create working dir
@@ -67,6 +70,43 @@ if($channel -eq "SEC"){
     $SECUrl = "https://raw.githubusercontent.com/lubonbvba/azavdpublic/main/Scripts/Office/Configuration-Semi-Anual-Enterprise.xml"
     $configXMLFile = "Configuratie-Semi-Anual-Enterprise.xml"
     Invoke-WebRequest -Uri $SECUrl -OutFile "$workingDir\$configXMLFile"
+}
+
+if ($InstallVisio) {
+    Write-Log -Message "Adding Visio to the Office configuration" -Type 'INFO'
+    $configurationPath = "$workingDir\$configXMLFile"
+    [xml]$configuration = Get-Content -Path $configurationPath -Raw
+    $addNode = $configuration.SelectSingleNode('/Configuration/Add')
+    if ($null -eq $addNode) {
+        throw "The Office configuration does not contain a Configuration/Add element."
+    }
+
+    $visioProduct = $configuration.CreateElement('Product')
+    $visioProduct.SetAttribute('ID', 'VisioProRetail')
+    foreach ($languageId in @('en-us', 'nl-nl', 'fr-fr', 'de-de')) {
+        $language = $configuration.CreateElement('Language')
+        $language.SetAttribute('ID', $languageId)
+        $null = $visioProduct.AppendChild($language)
+    }
+    foreach ($appId in @('Groove', 'Lync', 'OneDrive')) {
+        $excludedApp = $configuration.CreateElement('ExcludeApp')
+        $excludedApp.SetAttribute('ID', $appId)
+        $null = $visioProduct.AppendChild($excludedApp)
+    }
+    $null = $addNode.AppendChild($visioProduct)
+
+    $xmlSettings = New-Object System.Xml.XmlWriterSettings
+    $xmlSettings.Indent = $true
+    $xmlSettings.IndentChars = '  '
+    $xmlSettings.NewLineChars = "`r`n"
+    $xmlSettings.NewLineHandling = [System.Xml.NewLineHandling]::Replace
+    $xmlWriter = [System.Xml.XmlWriter]::Create($configurationPath, $xmlSettings)
+    try {
+        $configuration.Save($xmlWriter)
+    }
+    finally {
+        $xmlWriter.Dispose()
+    }
 }
 
 # Extract ODT
