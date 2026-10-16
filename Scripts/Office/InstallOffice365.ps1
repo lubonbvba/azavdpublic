@@ -6,7 +6,10 @@ param(
     [string]$channel = "MEC",
 
     [Parameter(HelpMessage = "Also install Visio")]
-    [switch]$InstallVisio
+    [switch]$InstallVisio,
+
+    [Parameter(HelpMessage = "Exclude classic Outlook from the Office installation")]
+    [switch]$ExcludeOutlookClassic
 )
 
 # Create working dir
@@ -72,15 +75,30 @@ if($channel -eq "SEC"){
     Invoke-WebRequest -Uri $SECUrl -OutFile "$workingDir\$configXMLFile"
 }
 
-if ($InstallVisio) {
-    Write-Log -Message "Adding Visio to the Office configuration" -Type 'INFO'
+if ($InstallVisio -or $ExcludeOutlookClassic) {
     $configurationPath = "$workingDir\$configXMLFile"
     [xml]$configuration = Get-Content -Path $configurationPath -Raw
     $addNode = $configuration.SelectSingleNode('/Configuration/Add')
     if ($null -eq $addNode) {
         throw "The Office configuration does not contain a Configuration/Add element."
     }
+}
 
+if ($ExcludeOutlookClassic) {
+    Write-Log -Message "Excluding classic Outlook from the Office configuration" -Type 'INFO'
+    $officeProduct = $configuration.SelectSingleNode('/Configuration/Add/Product[starts-with(@ID, "O365") or starts-with(@ID, "Microsoft365")]')
+    if ($null -eq $officeProduct) {
+        throw "The Office configuration does not contain a Microsoft 365 Apps product."
+    }
+    if ($null -eq $officeProduct.SelectSingleNode('ExcludeApp[@ID="Outlook"]')) {
+        $excludedOutlook = $configuration.CreateElement('ExcludeApp')
+        $excludedOutlook.SetAttribute('ID', 'Outlook')
+        $null = $officeProduct.AppendChild($excludedOutlook)
+    }
+}
+
+if ($InstallVisio) {
+    Write-Log -Message "Adding Visio to the Office configuration" -Type 'INFO'
     $visioProduct = $configuration.CreateElement('Product')
     $visioProduct.SetAttribute('ID', 'VisioProRetail')
     foreach ($languageId in @('en-us', 'nl-nl', 'fr-fr', 'de-de')) {
@@ -94,7 +112,9 @@ if ($InstallVisio) {
         $null = $visioProduct.AppendChild($excludedApp)
     }
     $null = $addNode.AppendChild($visioProduct)
+}
 
+if ($InstallVisio -or $ExcludeOutlookClassic) {
     $xmlSettings = New-Object System.Xml.XmlWriterSettings
     $xmlSettings.Indent = $true
     $xmlSettings.IndentChars = '  '

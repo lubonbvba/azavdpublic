@@ -470,6 +470,16 @@ try {
 
                 )
         }
+        if ($IdentityServiceProvider -eq "EntraDS") {
+                $Settings += @(
+                        [PSCustomObject]@{
+                                Name         = 'RoamIdentity'
+                                Path         = 'HKLM:\SOFTWARE\FSLogix\Profiles'
+                                PropertyType = 'DWord'
+                                Value        = 1
+                        }
+                )
+        }
         If ($FsLogixStorageAccountKey -ne '') {                
                 $SAName = $FSLogixStorageFQDN.Split('.')[0]
                 Write-Log -Message "Adding Local Storage Account Key for '$FSLogixStorageFQDN' to Credential Manager" -Category 'Info'
